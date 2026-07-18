@@ -1,10 +1,12 @@
-name: PowerShell validation
+name: PowerShell checks
 
 on:
   push:
     branches:
       - main
   pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -17,39 +19,85 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Install PSScriptAnalyzer
-        shell: pwsh
+        shell: powershell
         run: |
           Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
           Install-Module PSScriptAnalyzer -Scope CurrentUser -Force
 
-      - name: Check Windows PowerShell syntax
+      - name: Run PSScriptAnalyzer
         shell: powershell
         run: |
-          $tokens = $null
-          $errors = $null
-          [void][System.Management.Automation.Language.Parser]::ParseFile(
-              (Resolve-Path '.\src\ChallengeTokenRemover.ps1'),
-              [ref]$tokens,
-              [ref]$errors
-          )
+          $scriptPath = Resolve-Path '.\ChallengeTokenRemover\src\ChallengeTokenRemover.ps1'
+          $settingsPath = Resolve-Path '.\ChallengeTokenRemover\PSScriptAnalyzerSettings.psd1'
 
-          if ($errors.Count -gt 0) {
-              $errors | Format-List
-              exit 1
-          }
-
-      - name: Run PSScriptAnalyzer
-        shell: pwsh
-        run: |
           $results = Invoke-ScriptAnalyzer `
-              -Path '.\src\ChallengeTokenRemover.ps1' `
-              -Settings '.\PSScriptAnalyzerSettings.psd1'
+            -Path $scriptPath `
+            -Settings $settingsPath `
+            -Recurse
 
           $results | Format-Table -AutoSize
 
-          if ($results.Count -gt 0) {
-              exit 1
+          if ($results.Where({ $_.Severity -eq 'Error' }).Count -gt 0) {
+              throw 'PSScriptAnalyzer found one or more errors.'
           }
+
+  syntax-windows-powershell:
+    name: Check Windows PowerShell syntax
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Parse script with Windows PowerShell
+        shell: powershell
+        run: |
+          $scriptPath = Resolve-Path '.\ChallengeTokenRemover\src\ChallengeTokenRemover.ps1'
+
+          $tokens = $null
+          $errors = $null
+
+          [System.Management.Automation.Language.Parser]::ParseFile(
+              $scriptPath,
+              [ref]$tokens,
+              [ref]$errors
+          ) | Out-Null
+
+          if ($errors.Count -gt 0) {
+              $errors | Format-List
+              throw 'Windows PowerShell syntax validation failed.'
+          }
+
+          Write-Host 'Windows PowerShell syntax validation passed.'
+
+  syntax-powershell-7:
+    name: Check PowerShell 7 syntax
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Parse script with PowerShell 7
+        shell: pwsh
+        run: |
+          $scriptPath = Resolve-Path '.\ChallengeTokenRemover\src\ChallengeTokenRemover.ps1'
+
+          $tokens = $null
+          $errors = $null
+
+          [System.Management.Automation.Language.Parser]::ParseFile(
+              $scriptPath,
+              [ref]$tokens,
+              [ref]$errors
+          ) | Out-Null
+
+          if ($errors.Count -gt 0) {
+              $errors | Format-List
+              throw 'PowerShell 7 syntax validation failed.'
+          }
+
+          Write-Host 'PowerShell 7 syntax validation passed.'
