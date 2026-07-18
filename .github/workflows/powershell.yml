@@ -1,0 +1,55 @@
+name: PowerShell validation
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    name: Analyze PowerShell
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install PSScriptAnalyzer
+        shell: pwsh
+        run: |
+          Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+          Install-Module PSScriptAnalyzer -Scope CurrentUser -Force
+
+      - name: Check Windows PowerShell syntax
+        shell: powershell
+        run: |
+          $tokens = $null
+          $errors = $null
+          [void][System.Management.Automation.Language.Parser]::ParseFile(
+              (Resolve-Path '.\src\ChallengeTokenRemover.ps1'),
+              [ref]$tokens,
+              [ref]$errors
+          )
+
+          if ($errors.Count -gt 0) {
+              $errors | Format-List
+              exit 1
+          }
+
+      - name: Run PSScriptAnalyzer
+        shell: pwsh
+        run: |
+          $results = Invoke-ScriptAnalyzer `
+              -Path '.\src\ChallengeTokenRemover.ps1' `
+              -Settings '.\PSScriptAnalyzerSettings.psd1'
+
+          $results | Format-Table -AutoSize
+
+          if ($results.Count -gt 0) {
+              exit 1
+          }

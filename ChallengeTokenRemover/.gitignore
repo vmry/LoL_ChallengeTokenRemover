@@ -1,0 +1,39 @@
+# Operating systems
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Editors and IDEs
+.vscode/
+.idea/
+*.code-workspace
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# PowerShell
+*.clixml
+*.ps1xml.user
+*.pssc
+*.psrc
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+*.bak
+*.swp
+*~
+
+# Build and release output
+build/
+dist/
+release/
+artifacts/
+*.zip
+
+# Local environment files
+.env
+.env.*
+!.env.example

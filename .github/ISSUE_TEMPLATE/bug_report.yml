@@ -1,0 +1,74 @@
+name: Bug report
+description: Report a reproducible problem with Challenge Token Remover.
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not include League Client authentication tokens, lockfile contents, or account credentials.
+
+  - type: input
+    id: version
+    attributes:
+      label: Project version
+      placeholder: "1.0.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: powershell
+    attributes:
+      label: PowerShell version
+      options:
+        - Windows PowerShell 5.1
+        - PowerShell 7.x
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version
+      placeholder: "Windows 11 24H2"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Problem description
+      description: Describe what happened and what you expected.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction steps
+      placeholder: |
+        1. Open the League Client
+        2. Sign in
+        3. Run Run.bat
+        4. Observe the error
+    validations:
+      required: true
+
+  - type: textarea
+    id: output
+    attributes:
+      label: Console output
+      description: Remove all tokens, personal paths, and account data.
+      render: text
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Confirmation
+      options:
+        - label: I removed all credentials and personal information.
+          required: true
+        - label: I searched existing issues before submitting this report.
+          required: true
